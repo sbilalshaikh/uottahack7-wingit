@@ -98,6 +98,8 @@ new_slide_prompt = """You are an AI designed to evaluate whether a new bullet po
 The full conversation transcription is this, use it only for context on the actual user message slide bullet point contents:
 [transcript]
 
+Tend toward keeping things together, since it is nicer to have more full slides than constantly empty. 
+
 You must make a binary decision (0 or 1) and provide reasoning internally to justify the decision but do not include the reasoning in the output. The output must be exclusively the number **0** or **1**."""
 
 continue_system_prompt = [{
@@ -270,9 +272,10 @@ async def websocket_endpoint(websocket: WebSocket):
                     else:
                         should_append == False
 
-                    try:
+                    '''try:
                         print("Making request to Groq for slide transition...")
-                        continue_system_prompt[0]["content"].replace("[transcript]", full_transcription)
+                        continue_system_prompt[0]["content"] = continue_system_prompt[0]["content"].replace("[transcript]", full_transcription)
+                        print(continue_system_prompt)
                         template_msg_continue.append({"role" : "user" , "content" : completion.choices[0].message.content})
                         response = groq_client.chat.completions.create(
                             messages=continue_system_prompt + list(template_msg_continue),
@@ -280,7 +283,6 @@ async def websocket_endpoint(websocket: WebSocket):
                             temperature=0,
                             top_p=0.1
                         )
-                        print(template_msg_continue)
                         print("Response from Groq:", response.choices[0].message.content)  # Debug print 2
                         template_msg_continue.pop()
                         should_clear_slide = int(response.choices[0].message.content)
@@ -291,7 +293,7 @@ async def websocket_endpoint(websocket: WebSocket):
                             should_clear_slide = 0
                     except Exception as e:
                         print(f"Error in slide transition check: {e}")  # More detailed error message
-                        should_clear_slide = 0
+                        should_clear_slide = 0'''
 
                     if sendToGroq == False:
                         should_append = False
@@ -304,13 +306,18 @@ async def websocket_endpoint(websocket: WebSocket):
                         window.append(completion.choices[0].message.content)
 
 
-                    if should_clear_slide:
+                    '''if should_clear_slide:
                         template_msg_continue = [{"role" : "system" , "content" : new_slide_prompt}]
                     else:
-                        template_msg_continue.append({"role" : "user" , "content" : completion.choices[0].message.content})                        
+                        template_msg_continue.append({"role" : "user" , "content" : completion.choices[0].message.content})  '''                      
  
                     if not should_append:
                         print("failed: " , completion.choices[0].message.content)
+
+                    if "next slide" in transcription.lower():
+                        should_clear_slide = 1
+                    else:
+                        should_clear_slide = 0
 
                     await websocket.send_json({
                         "transcription": completion.choices[0].message.content if should_append else "",
