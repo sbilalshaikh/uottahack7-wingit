@@ -1,4 +1,5 @@
 import io
+import os
 import argparse
 import asyncio
 import numpy as np
@@ -82,6 +83,62 @@ template_msg = [{
     """
 }]
 
+
+new_slide_prompt = """You are a binary classifier that MUST ONLY output "0" or "1" to indicate slide transitions.
+
+Previous content: {list of previous points}
+New content: {new point}
+
+RULES:
+1. Output "1" if:
+   - Topic changes completely (grades → extracurriculars)
+   - New major category (frontend → backend)
+   - Different phase or component
+   - Distinct subject switch
+
+2. Output "0" if:
+   - Same topic continues
+   - Supporting details
+   - Related examples
+   - Connected steps
+
+CRITICAL FORMAT RULES:
+- ONLY OUTPUT "0" or "1"
+- NO EXPLANATIONS
+- NO ADDITIONAL TEXT
+- NO SPACES OR NEWLINES
+- SINGLE CHARACTER RESPONSE ONLY
+
+Examples (with strict outputs):
+
+Input: 
+Previous: "Maintain 3.8 GPA"
+New: "Join research labs"
+Output: 1
+
+Input:
+Previous: "Join research labs"
+New: "Publish research paper"
+Output: 0
+
+Input:
+Previous: "Setup database schema"
+New: "Implement user interface"
+Output: 1
+
+Input:
+Previous: "Optimize query performance"
+New: "Reduce database latency"
+Output: 0
+
+REMEMBER: Your entire response must be exactly one character: "0" or "1"."""
+
+continue_system_prompt = [{
+    "role": "system",
+    "content": new_slide_prompt
+}]
+
+template_msg_continue = deque(maxlen=3)
 
 def check_similarity(new_content, existing_contents, threshold, vectorizer=None):
     if vectorizer is None:
@@ -170,11 +227,13 @@ async def websocket_endpoint(websocket: WebSocket):
     online = online_factory(args, asr, tokenizer)
     print("Online loaded.")
 
+    sendToGroq=False
     groq_client = Groq(api_key="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")
 
     # Continuously read decoded PCM from ffmpeg stdout in a background task
     async def ffmpeg_stdout_reader():
-        similarity = 0
+        global template_msg_continue 
+        nonlocal sendToGroq
         nonlocal pcm_buffer
         loop = asyncio.get_event_loop()
         full_transcription = ""
@@ -236,22 +295,56 @@ async def websocket_endpoint(websocket: WebSocket):
                         )
 
                     vectorizer = TfidfVectorizer(stop_words='english')
+                    print(window)
                     should_append = (
                         check_similarity(completion.choices[0].message.content, list(window), 0.2, vectorizer) and
                         check_similarity(completion.choices[0].message.content, non_responses, 0.1, vectorizer)
                     )
 
+                    try:
+                        print("Making request to Groq for slide transition...") 
+                        template_msg_continue.append({"role" : "user" , "content" : completion.choices[0].message.content})
+                        response = groq_client.chat.completions.create(
+                            messages=continue_system_prompt + list(template_msg_continue),
+                            model="llama-3.3-70b-versatile",
+                            temperature=0,
+                            top_p=0.1
+                        )
+                        print("Response from Groq:", response.choices[0].message.content)  # Debug print 2
+                        template_msg_continue.pop()
+                        should_clear_slide = int(response.choices[0].message.content)
+                        print("Converted to int:", should_clear_slide)  # Debug print 3
+                        
+                        if should_clear_slide not in [0 , 1]:
+                            print("Invalid value, defaulting to 0")  # Debug print 4
+                            should_clear_slide = 0
+                    except Exception as e:
+                        print(f"Error in slide transition check: {e}")  # More detailed error message
+                        should_clear_slide = 0
+
+                    if sendToGroq == False:
+                        should_append = False
+                        sendToGroq = True
+                    else: 
+                        sendToGroq = False
+
                     if should_append:
                         summaries.append(completion.choices[0].message.content)
                         window.append(completion.choices[0].message.content)
-                        
+
+
+                    if should_clear_slide:
+                        template_msg_continue = [{"role" : "system" , "content" : new_slide_prompt}]
+                    else:
+                        template_msg_continue.append({"role" : "user" , "content" : completion.choices[0].message.content})                        
  
                     if not should_append:
                         print("failed: " , completion.choices[0].message.content)
 
                     await websocket.send_json({
                         "transcription": completion.choices[0].message.content if should_append else "",
-                        "buffer": buffer
+                        "buffer": buffer,
+                        "clear" : int(should_clear_slide)
                     })
             except Exception as e:
                 print(f"Exception in ffmpeg_stdout_reader: {e}")
@@ -271,6 +364,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     except WebSocketDisconnect:
         print("WebSocket connection closed.")
+        os.remove("audio.wav")
     except Exception as e:
         print(f"Error in websocket loop: {e}")
     finally:
