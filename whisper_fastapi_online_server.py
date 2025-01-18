@@ -50,8 +50,7 @@ template_msg = [{
     </rules>
 
     <format>
-    - {Key metric or action verb} + {core point}
-    - {Key metric or action verb} + {core point}
+    {Key metric or action verb} + {core point}
     ...
     </format>
 
