@@ -136,8 +136,12 @@
         
         websocket.onmessage = (event) => {
           const data = JSON.parse(event.data);
-          const { transcription, buffer } = data;
+          const { transcription, buffer , clear } = data;
           
+          if (clear) {
+            transcriptionsDiv.innerHTML = "";
+          }
+
           if (transcription && transcription.trim() !== "") {
             const bullet = createBulletPoint(transcription);
             if (bullet) {
