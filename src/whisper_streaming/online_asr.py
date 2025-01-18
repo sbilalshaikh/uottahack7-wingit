@@ -152,20 +152,22 @@ class OnlineASRProcessor:
         #)
 
         client = Groq(api_key="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")
+        try:
+            write("audio.wav", 16000, self.audio_buffer)
 
-        write("audio.wav", 16000, self.audio_buffer)
+            with open("audio.wav", 'rb') as file:
+                transcription = client.audio.transcriptions.create(
+                file=("audio.wav", file.read()),
+                model="whisper-large-v3-turbo",
+                response_format="json",
+                language="en",
+                temperature=0.0 
+                )
 
-        with open("audio.wav", 'rb') as file:
-            transcription = client.audio.transcriptions.create(
-            file=("audio.wav", file.read()),
-            model="whisper-large-v3-turbo",
-            response_format="json",
-            language="en",
-            temperature=0.0 
-            )
-
-        self.audio_buffer = np.array([], dtype=self.audio_buffer.dtype)
-        return transcription.text
+            self.audio_buffer = np.array([], dtype=self.audio_buffer.dtype)
+            return transcription.text
+        except:
+            return ""
 
         #res = self.asr.transcribe(self.audio_buffer)
 

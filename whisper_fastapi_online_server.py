@@ -34,6 +34,7 @@ template_msg = [{
     "role": "system",
     "content": """
     You are an expert PowerPoint slide creator. Your job is to transform spoken content into concise, impactful single bullet point.
+    Make bullet points, don't just summarize what they are saying as a third person observer.
 
     <rules>
     - Maximum 1 to 2 sentences per bullet point
@@ -42,11 +43,9 @@ template_msg = [{
     - Try to abbreviate sentences
     - Keep parallel structure
     - If content isn't presentation-worthy, return empty string
-    - STRICTLY use only information provided
-    - NO external knowledge or assumptions
-    - NO elaboration beyond given content
+    - Use only information provided
     - DO not repeat language
-    - Only summarize the most recent messages, the otheres are only there for context
+    - Only summarize the most recent few messages, the otheres are only there for context. Essentially combine them into a logical cohesive block.
     - Send the text for the point only, with no dash - or dot at the start of the point.
     </rules>
 
@@ -66,14 +65,11 @@ template_msg = [{
     </examples>
 
     <critical_rules>
-    - ONLY use explicitly stated information with extra connective wordss
     - Mild inference allowed
-    - NO additional context or knowledge beyond what has been said
     - FIRST PERSON perspective (my team, our product)
     - EMPTY string if content isn't presentation-worthy
     - ONLY single bullet point or empty string as response
-    - ZERO elaboration beyond given content
-    - Only summarize the most recent 1 to 2 messages.
+    - Only summarize the most recent few messages. Do not repeat summaries.
     </critical_rules>
 
     REMEMBER: You are a transformer, not a creator. Only transform what exists, never add what isn't there.
@@ -170,12 +166,14 @@ async def websocket_endpoint(websocket: WebSocket):
     online = online_factory(args, asr, tokenizer)
     print("Online loaded.")
 
+    sendToGroq=False
     groq_client = Groq(api_key="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")
 
     # Continuously read decoded PCM from ffmpeg stdout in a background task
     async def ffmpeg_stdout_reader():
         similarity = 0
         nonlocal pcm_buffer
+        nonlocal sendToGroq
         loop = asyncio.get_event_loop()
         full_transcription = ""
         beg = time()
@@ -229,17 +227,28 @@ async def websocket_endpoint(websocket: WebSocket):
                         completion = groq_client.chat.completions.create(
 
                             messages=template_msg,
-                            model="llama-3.3-70b-versatile",
+                            model="llama3-70b-8192",
                             temperature=0,
                             top_p=0.1
 
                         )
+                    if completion.choices[0].message.content != "":
+                        vectorizer = TfidfVectorizer(stop_words='english')
+                        should_append = (
+                            check_similarity(completion.choices[0].message.content, list(window), 0.2, vectorizer) and
+                            check_similarity(completion.choices[0].message.content, non_responses, 0.1, vectorizer)
+                        )
+                    else:
+                        should_append = False
 
-                    vectorizer = TfidfVectorizer(stop_words='english')
-                    should_append = (
-                        check_similarity(completion.choices[0].message.content, list(window), 0.2, vectorizer) and
-                        check_similarity(completion.choices[0].message.content, non_responses, 0.1, vectorizer)
-                    )
+                    if sendToGroq == False:
+                        should_append = False
+                        sendToGroq = True
+                    else:
+                        sendToGroq = False
+
+                    if completion.choices[0].message.content == '""' or completion.choices[0].message.content == "":
+                        should_append == False
 
                     if should_append:
                         summaries.append(completion.choices[0].message.content)
