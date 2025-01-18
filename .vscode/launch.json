@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug whisper_fastapi_online_server",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/whisper_fastapi_online_server.py",
+        "args": [
+          "--host",
+          "0.0.0.0",
+          "--port",
+          "4999"
+        ],
+        "console": "integratedTerminal",
+        "justMyCode": false
+      }
+    ]
+  }
+  
