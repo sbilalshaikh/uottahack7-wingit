@@ -153,6 +153,8 @@ class OnlineASRProcessor:
 
         client = Groq()
 
+        write("audio.wav", 16000, self.audio_buffer)
+
         with open("audio.wav", 'rb') as file:
             transcription = client.audio.transcriptions.create(
             file=("audio.wav", file.read()),
@@ -162,7 +164,8 @@ class OnlineASRProcessor:
             temperature=0.0 
             )
 
-        res = transcription.text
+        self.audio_buffer = np.array([], dtype=self.audio_buffer.dtype)
+        return transcription.text
 
         #res = self.asr.transcribe(self.audio_buffer)
 

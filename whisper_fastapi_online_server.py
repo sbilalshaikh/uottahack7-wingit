@@ -123,7 +123,8 @@ async def websocket_endpoint(websocket: WebSocket):
                     )
                     pcm_buffer = bytearray()
                     online.insert_audio_chunk(pcm_array)
-                    transcription = online.process_iter()[2]
+                    transcription = online.process_iter()
+                    
                     full_transcription += transcription
                     if args.vac:
                         buffer = online.online.to_flush(
