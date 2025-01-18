@@ -151,7 +151,7 @@ class OnlineASRProcessor:
             #f"transcribing {len(self.audio_buffer)/self.SAMPLING_RATE:2.2f} seconds from {self.buffer_time_offset:2.2f}"
         #)
 
-        client = Groq()
+        client = Groq(api_key="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")
 
         write("audio.wav", 16000, self.audio_buffer)
 
