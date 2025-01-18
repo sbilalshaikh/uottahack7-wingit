@@ -46,7 +46,7 @@
     }
 
     .text-area {
-      flex: 2;
+      flex: 1;
       border: 2px solid #000;
       border-radius: 5px;
       padding: 20px;
@@ -54,7 +54,7 @@
     }
 
     .image-area {
-      flex: 1;
+      flex: 2;
       border: 2px solid #000;
       border-radius: 5px;
       display: flex;
@@ -93,6 +93,7 @@
     let isRecording = false;
     let websocket = null;
     let recorder = null;
+
     const chunkDuration = 3000;
     const websocketUrl = "ws://localhost:4999/asr";
 
