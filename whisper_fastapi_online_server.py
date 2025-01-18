@@ -47,6 +47,7 @@ template_msg = [{
     - NO elaboration beyond given content
     - DO not repeat language
     - Only summarize the most recent messages, the otheres are only there for context
+    - Send the text for the point only, with no dash - or dot at the start of the point.
     </rules>
 
     <format>
