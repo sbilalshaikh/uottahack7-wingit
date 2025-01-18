@@ -119,7 +119,7 @@ parser.add_argument(
     help="The host address to bind the server to.",
 )
 parser.add_argument(
-    "--port", type=int, default=8000, help="The port number to bind the server to."
+    "--port", type=int, default=4999, help="The port number to bind the server to."
 )
 parser.add_argument(
     "--warmup-file",
@@ -178,6 +178,7 @@ async def websocket_endpoint(websocket: WebSocket):
     print("Loading online.")
     online = online_factory(args, asr, tokenizer)
     print("Online loaded.")
+    sendToGroq=False
 
     groq_client = Groq(api_key="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")
 
@@ -185,6 +186,7 @@ async def websocket_endpoint(websocket: WebSocket):
     async def ffmpeg_stdout_reader():
         similarity = 0
         nonlocal pcm_buffer
+        nonlocal sendToGroq
         loop = asyncio.get_event_loop()
         full_transcription = ""
         beg = time()
@@ -231,39 +233,48 @@ async def websocket_endpoint(websocket: WebSocket):
                         buffer in full_transcription
                     ):  # With VAC, the buffer is not updated until the next chunk is processed
                         buffer = ""
-
                         if "Thank you" not in transcription and "No relevant" not in transcription:
                             template_msg.append({"role" : "user" , "content" : transcription})
                         # make a request to groq here? 
-                        completion = groq_client.chat.completions.create(
+                        print(template_msg[1:])
+                        print('\n\n')
+                        if sendToGroq:
+                            completion = groq_client.chat.completions.create(
 
-                            messages=template_msg,
-                            model="llama-3.3-70b-versatile",
-                            temperature=0,
-                            top_p=0.1
+                                messages=template_msg,
+                                model="llama-3.3-70b-versatile",
+                                temperature=0,
+                                top_p=0.1
+                            )
+                            print(completion.choices[0].message.content)
+                            vectorizer = TfidfVectorizer(stop_words='english')
+                            should_append = (
+                                check_similarity(completion.choices[0].message.content, summaries, 0.3, vectorizer) and
+                                check_similarity(completion.choices[0].message.content, non_responses, 0.1, vectorizer)
+                            )
 
-                        )
+                            if should_append:
+                                summaries.append(completion.choices[0].message.content)
+                                
+                            # for i in range(len(summaries) - 1):
+                            #     mtx = TfidfVectorizer(stop_words='english').fit_transform([summaries[i], summaries[i + 1]])
+                            #     similarity = cosine_similarity(mtx[0:1], mtx[1:2])[0][0]
+                            #     print(similarity , end=" ")
+                            if not should_append:
+                                print("failed: " , completion.choices[0].message.content)
 
-                    vectorizer = TfidfVectorizer(stop_words='english')
-                    should_append = (
-                        check_similarity(completion.choices[0].message.content, summaries, 0.2, vectorizer) and
-                        check_similarity(completion.choices[0].message.content, non_responses, 0.1, vectorizer)
-                    )
+                            await websocket.send_json({
+                                "transcription": completion.choices[0].message.content if should_append else "",
+                                "buffer": buffer
+                            })
 
-                    if should_append:
-                        summaries.append(completion.choices[0].message.content)
-                        
-                    # for i in range(len(summaries) - 1):
-                    #     mtx = TfidfVectorizer(stop_words='english').fit_transform([summaries[i], summaries[i + 1]])
-                    #     similarity = cosine_similarity(mtx[0:1], mtx[1:2])[0][0]
-                    #     print(similarity , end=" ")
-                    if not should_append:
-                        print("failed: " , completion.choices[0].message.content)
-
-                    await websocket.send_json({
-                        "transcription": completion.choices[0].message.content if should_append else "",
-                        "buffer": buffer
-                    })
+                            sendToGroq=False
+                        else:
+                            await websocket.send_json({
+                                "transcription": "",
+                                "buffer": buffer
+                            })
+                            sendToGroq=True
             except Exception as e:
                 print(f"Exception in ffmpeg_stdout_reader: {e}")
                 break
@@ -306,5 +317,5 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "whisper_fastapi_online_server:app", host=args.host, port=args.port, reload=True
+        "whisper_fastapi_online_server:app", host=args.host, port=4999, reload=True
     )
