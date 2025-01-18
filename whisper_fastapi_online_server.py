@@ -80,54 +80,25 @@ template_msg = [{
 }]
 
 
-new_slide_prompt = """You are a binary classifier that MUST ONLY output "0" or "1" to indicate slide transitions.
+new_slide_prompt = """You are an AI designed to evaluate whether a new bullet point logically belongs on a specific presentation slide. Your task is to analyze the thematic consistency and relevance between the `new_point` and the `existing_points` provided.  
 
-Previous content: {list of previous points}
-New content: {new point}
+**Context:**  
+- Presentation slides aim to communicate a cohesive and focused message.  
+- All bullet points on a slide must align with a single, clear topic or theme to maintain clarity for the audience.  
+- Irrelevant or weakly connected points reduce the effectiveness of the slide.  
 
-RULES:
-1. Output "1" if:
-   - Topic changes completely (grades → extracurriculars)
-   - New major category (frontend → backend)
-   - Different phase or component
-   - Distinct subject switch
+**Threshold for Decision:**  
+1. Assign **1** if the `new_point` clearly aligns with the topic established by the `existing_points`. This includes points that:
+   - Expand upon or complement the existing points.  
+   - Fit naturally within the slide's theme and purpose.  
+2. Assign **0** if the `new_point` does not align. This includes points that:  
+   - Introduce a new, unrelated topic.  
+   - Have only a vague or tenuous connection to the existing points.  
 
-2. Output "0" if:
-   - Same topic continues
-   - Supporting details
-   - Related examples
-   - Connected steps
+The full conversation transcription is this, use it only for context on the actual user message slide bullet point contents:
+[transcript]
 
-CRITICAL FORMAT RULES:
-- ONLY OUTPUT "0" or "1"
-- NO EXPLANATIONS
-- NO ADDITIONAL TEXT
-- NO SPACES OR NEWLINES
-- SINGLE CHARACTER RESPONSE ONLY
-
-Examples (with strict outputs):
-
-Input: 
-Previous: "Maintain 3.8 GPA"
-New: "Join research labs"
-Output: 1
-
-Input:
-Previous: "Join research labs"
-New: "Publish research paper"
-Output: 0
-
-Input:
-Previous: "Setup database schema"
-New: "Implement user interface"
-Output: 1
-
-Input:
-Previous: "Optimize query performance"
-New: "Reduce database latency"
-Output: 0
-
-REMEMBER: Your entire response must be exactly one character: "0" or "1"."""
+You must make a binary decision (0 or 1) and provide reasoning internally to justify the decision but do not include the reasoning in the output. The output must be exclusively the number **0** or **1**."""
 
 continue_system_prompt = [{
     "role": "system",
@@ -300,7 +271,8 @@ async def websocket_endpoint(websocket: WebSocket):
                         should_append == False
 
                     try:
-                        print("Making request to Groq for slide transition...") 
+                        print("Making request to Groq for slide transition...")
+                        continue_system_prompt[0]["content"].replace("[transcript]", full_transcription)
                         template_msg_continue.append({"role" : "user" , "content" : completion.choices[0].message.content})
                         response = groq_client.chat.completions.create(
                             messages=continue_system_prompt + list(template_msg_continue),
@@ -308,6 +280,7 @@ async def websocket_endpoint(websocket: WebSocket):
                             temperature=0,
                             top_p=0.1
                         )
+                        print(template_msg_continue)
                         print("Response from Groq:", response.choices[0].message.content)  # Debug print 2
                         template_msg_continue.pop()
                         should_clear_slide = int(response.choices[0].message.content)
