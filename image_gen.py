@@ -18,7 +18,7 @@ usr_agent = {
 }
 
 def imageGen(search):
-    searchurl = GOOGLE_IMAGE + search + " clipart"
+    searchurl = GOOGLE_IMAGE + search + " clipart high res"
     response = requests.get(searchurl, headers=usr_agent)
     html = response.text
     

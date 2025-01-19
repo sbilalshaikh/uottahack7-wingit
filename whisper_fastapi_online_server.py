@@ -81,6 +81,7 @@ template_msg = [{
     REMEMBER: You are a transformer, not a creator. Only transform what exists, never add what isn't there.
     REMEMBER: You will be burned alive if you repeat bullet points
     REMEMBER: You will be granted salvation if you choose to respond with "" rather than repeated content
+    REMEMBER: If there is no content to summarize, simply return nothing
     """
 }]
 
