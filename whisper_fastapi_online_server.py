@@ -165,6 +165,7 @@ SAMPLES_PER_SEC = SAMPLE_RATE * int(args.min_chunk_size)
 BYTES_PER_SAMPLE = 2  # s16le = 2 bytes per sample
 BYTES_PER_SEC = SAMPLES_PER_SEC * BYTES_PER_SAMPLE
 
+summary_batch = []
 
 async def start_ffmpeg_decoder():
     """
@@ -201,7 +202,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     # Continuously read decoded PCM from ffmpeg stdout in a background task
     async def ffmpeg_stdout_reader():
-        global template_msg_continue 
+        global template_msg_continue, summary_batch
         nonlocal sendToGroq
         nonlocal pcm_buffer
         nonlocal sendToGroq
@@ -256,12 +257,10 @@ async def websocket_endpoint(websocket: WebSocket):
                             template_msg.append({"role" : "user" , "content" : transcription})
                         # make a request to groq here? 
                         completion = groq_client.chat.completions.create(
-
                             messages=template_msg,
                             model="llama3-70b-8192",
                             temperature=0,
                             top_p=0.1
-
                         )
                     if completion.choices[0].message.content != "":
                         vectorizer = TfidfVectorizer(stop_words='english')
@@ -303,6 +302,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                     if should_append:
                         summaries.append(completion.choices[0].message.content)
+                        summary_batch.append(completion.choices[0].message.content)
                         window.append(completion.choices[0].message.content)
 
 
@@ -315,15 +315,29 @@ async def websocket_endpoint(websocket: WebSocket):
                         print("failed: " , completion.choices[0].message.content)
                         print(window)
 
-                    if "next slide" in transcription.lower():
+                    if "next slide" in transcription.lower() or "next slide" in completion.choices[0].message.content.lower():
                         should_clear_slide = 1
+                        
+                        header_input = "Generate a brief 5-word max summary of the following conversations:\n" + "\n".join(summary_batch[:len(summary_batch) - 1])
+                        print("Summary batch:", summary_batch)
+                        header_completion = groq_client.chat.completions.create(
+                            messages=[{"role": "user", "content": header_input}],
+                            model="llama-3.3-70b-versatile",
+                            temperature=0,
+                            top_p=0.1
+                        )
+                        
+                        header = header_completion.choices[0].message.content
+                        summary_batch = []
                     else:
+                        header = ""
                         should_clear_slide = 0
 
                     await websocket.send_json({
                         "transcription": completion.choices[0].message.content if should_append else "",
                         "buffer": buffer,
-                        "clear" : int(should_clear_slide)
+                        "clear" : int(should_clear_slide),
+                        "header": header
                     })
             except Exception as e:
                 print(f"Exception in ffmpeg_stdout_reader: {e}")

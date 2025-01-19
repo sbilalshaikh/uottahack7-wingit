@@ -97,7 +97,7 @@
     let recorder = null;
 
     const chunkDuration = 4000;
-    const websocketUrl = "ws://localhost:4999/asr";
+    const websocketUrl = "ws://localhost:8000/asr";
 
     const recordButton = document.getElementById("recordButton");
     const exportButton = document.getElementById("exportButton");
@@ -135,6 +135,16 @@
       }
       return null;
     }
+    
+    function createHeader(text) {
+      if (text && text.trim()) {
+        const header = document.createElement('div');
+        header.className = 'header';
+        header.textContent = `${text.trim()}`;
+        return header;
+      }
+      return null;
+    }
 
     function setupWebSocket() {
       return new Promise((resolve, reject) => {
@@ -144,13 +154,22 @@
         
         websocket.onmessage = (event) => {
           const data = JSON.parse(event.data);
-          const { transcription, buffer , clear } = data;
+          const { transcription, buffer, clear, header } = data;
           
-          if (clear) {
-            transcriptionsDiv.innerHTML = "";
+          // if (clear) {
+          //   transcriptionsDiv.innerHTML = "";
+          // }
+
+          if (clear && header.trim() !== "") {
+            const header = createHeader(transcription);
+            if (header) {
+              transcriptionsDiv.appendChild(header);
+
+              transcriptionsDiv.scrollTop = transcriptionsDiv.scrollHeight;
+            }
           }
 
-          if (transcription && transcription.trim() !== "") {
+          if (transcription && transcription.trim() !== "" && transcription.trim() !== "\"\"") {
             const bullet = createBulletPoint(transcription);
             if (bullet) {
               transcriptionsDiv.appendChild(bullet);
