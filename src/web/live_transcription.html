@@ -98,9 +98,10 @@
     let isRecording = false;
     let websocket = null;
     let recorder = null;
+    var select = 0;
 
     const chunkDuration = 4000;
-    const websocketUrl = "ws://localhost:8000/asr";
+    const websocketUrl = "ws://localhost:4999/asr";
 
     const recordButton = document.getElementById("recordButton");
     const exportButton = document.getElementById("exportButton");
@@ -189,6 +190,15 @@
       }
     }
 
+    document.addEventListener("keydown" , async(event) => {
+
+      if (event.key.toLowerCase() == 'l'){
+        select = 1;
+      }
+
+
+    });
+
     function setupWebSocket() {
       return new Promise((resolve, reject) => {
         websocket = new WebSocket(websocketUrl);
@@ -197,14 +207,17 @@
         
         websocket.onmessage = (event) => {
           const data = JSON.parse(event.data);
-          const { transcription, buffer , clear } = data;
+          const { transcription, buffer , clear , imageUrl} = data;
           
           // if (clear) {
           //   transcriptionsDiv.innerHTML = "";
           // }
 
-          if (clear && header.trim() !== "") {
+          if ((clear && header.trim() !== "l") || select === 1) {
             const header = createHeader(transcription);
+            transcriptionsDiv.innerHTML = "";
+            imageGridDiv.innerHTML = "";
+            select = 0;
             if (header) {
               transcriptionsDiv.appendChild(header);
 
