@@ -57,10 +57,13 @@
       flex: 2;
       border: 2px solid #000;
       border-radius: 5px;
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 10px;
       align-items: center;
-      justify-content: center;
-      font-family: monospace;
+      justify-items: center;
+      background-color: #f8f8f8;
     }
 
     .bullet-point {
@@ -85,7 +88,7 @@
     </div>
     <div class="content-container">
       <div id="transcriptions" class="text-area"></div>
-      <div class="image-area">&lt;img&gt;</div>
+      <div id="imageGrid" class="image-area">&lt;img&gt;</div>
     </div>
   </div>
 
@@ -102,6 +105,8 @@
     const recordButton = document.getElementById("recordButton");
     const exportButton = document.getElementById("exportButton");
     const transcriptionsDiv = document.getElementById("transcriptions");
+	const imageGridDiv = document.getElementById("imageGrid");
+	
 
     exportButton.addEventListener("click", async () => {
       var transcription = document.getElementById('transcriptions');
@@ -146,6 +151,44 @@
       return null;
     }
 
+	function addImageToGrid(imageUrl) {
+      if (!imageUrl || !imageUrl.trim()) return;
+
+      const imgElement = document.createElement('img');
+      imgElement.src = imageUrl.trim();
+      imgElement.alt = "Image";
+      imgElement.style.width = "100%";
+      imgElement.style.height = "100%";
+      imgElement.style.objectFit = "cover";
+      imgElement.style.borderRadius = "5px";
+
+      if (imageGridDiv.children.length < 3) {
+        imageGridDiv.appendChild(imgElement);
+      } else {
+        imageGridDiv.removeChild(imageGridDiv.firstChild);
+        imageGridDiv.appendChild(imgElement);
+      }
+    }
+
+	function addImageToGrid(imageUrl) {
+      if (!imageUrl || !imageUrl.trim()) return;
+
+      const imgElement = document.createElement('img');
+      imgElement.src = imageUrl.trim();
+      imgElement.alt = "Image";
+      imgElement.style.width = "100%";
+      imgElement.style.height = "100%";
+      imgElement.style.objectFit = "cover";
+      imgElement.style.borderRadius = "5px";
+
+      if (imageGridDiv.children.length < 3) {
+        imageGridDiv.appendChild(imgElement);
+      } else {
+        imageGridDiv.removeChild(imageGridDiv.firstChild);
+        imageGridDiv.appendChild(imgElement);
+      }
+    }
+
     function setupWebSocket() {
       return new Promise((resolve, reject) => {
         websocket = new WebSocket(websocketUrl);
@@ -154,7 +197,7 @@
         
         websocket.onmessage = (event) => {
           const data = JSON.parse(event.data);
-          const { transcription, buffer, clear, header } = data;
+          const { transcription, buffer , clear } = data;
           
           // if (clear) {
           //   transcriptionsDiv.innerHTML = "";
@@ -177,7 +220,12 @@
               transcriptionsDiv.scrollTop = transcriptionsDiv.scrollHeight;
             }
           }
+
+			if (imageUrl) {
+				addImageToGrid(imageUrl)
+			}	
         };
+		  
 
         websocket.onerror = () => reject(new Error("WebSocket connection failed"));
       });
