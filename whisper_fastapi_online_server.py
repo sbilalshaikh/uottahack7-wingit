@@ -208,8 +208,8 @@ async def websocket_endpoint(websocket: WebSocket):
 
     # Continuously read decoded PCM from ffmpeg stdout in a background task
     async def ffmpeg_stdout_reader():
-        similarity = 0
-        global template_msg_continue 
+        # similarity = 0
+        global template_msg_continue, summary_batch
         nonlocal sendToGroq
         nonlocal imageUrl
         nonlocal pcm_buffer
@@ -387,7 +387,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     # Getting the base64 string
                     base64_image = encode_image(image_path)
 
-                    client = Groq()
+                    client = Groq(api_key="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")
 
                     prompt = '''
                     You are an advanced language model tasked with analyzing the sentiment of an audience during a presentation. Your analysis should evaluate the following three metrics:
