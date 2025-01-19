@@ -157,11 +157,11 @@ class OnlineASRProcessor:
 
             with open("audio.wav", 'rb') as file:
                 transcription = client.audio.transcriptions.create(
-                file=("audio.wav", file.read()),
-                model="whisper-large-v3-turbo",
-                response_format="json",
-                language="en",
-                temperature=0.0 
+                    file=("audio.wav", file.read()),
+                    model="whisper-large-v3-turbo",
+                    response_format="json",
+                    language="en",
+                    temperature=0.0 
                 )
 
             self.audio_buffer = np.array([], dtype=self.audio_buffer.dtype)
