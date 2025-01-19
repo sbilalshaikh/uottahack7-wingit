@@ -15,6 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from whisper_online import backend_factory, online_factory, add_shared_args
 
+from image_gen import imageGen
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -170,11 +172,22 @@ async def websocket_endpoint(websocket: WebSocket):
     online = online_factory(args, asr, tokenizer)
     print("Online loaded.")
 
+<<<<<<< Updated upstream
+=======
+    sendToGroq=False
+    imageUrl = ""
+>>>>>>> Stashed changes
     groq_client = Groq(api_key="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")
 
     # Continuously read decoded PCM from ffmpeg stdout in a background task
     async def ffmpeg_stdout_reader():
+<<<<<<< Updated upstream
         similarity = 0
+=======
+        global template_msg_continue 
+        nonlocal sendToGroq
+        nonlocal imageUrl
+>>>>>>> Stashed changes
         nonlocal pcm_buffer
         loop = asyncio.get_event_loop()
         full_transcription = ""
@@ -244,15 +257,31 @@ async def websocket_endpoint(websocket: WebSocket):
                     if should_append:
                         summaries.append(completion.choices[0].message.content)
                         window.append(completion.choices[0].message.content)
+<<<<<<< Updated upstream
                         
+=======
+                        imageUrl = imageGen(completion.choices[0].message.content)
+
+                    '''if should_clear_slide:
+                        template_msg_continue = [{"role" : "system" , "content" : new_slide_prompt}]
+                    else:
+                        template_msg_continue.append({"role" : "user" , "content" : completion.choices[0].message.content})  '''                      
+>>>>>>> Stashed changes
  
                     if not should_append:
                         print("failed: " , completion.choices[0].message.content)
 
                     await websocket.send_json({
                         "transcription": completion.choices[0].message.content if should_append else "",
+<<<<<<< Updated upstream
                         "buffer": buffer
                     })
+=======
+                        "buffer": buffer,
+                        "clear" : int(should_clear_slide),
+                        "imageUrl": imageUrl if should_append else ""
+                     })
+>>>>>>> Stashed changes
             except Exception as e:
                 print(f"Exception in ffmpeg_stdout_reader: {e}")
                 break
