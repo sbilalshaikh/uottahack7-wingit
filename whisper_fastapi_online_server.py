@@ -27,7 +27,7 @@ app.add_middleware(
 
 
 summaries = []
-window = deque(maxlen=2)
+window = deque(maxlen=1)
 transcriptions = []
 non_responses = ["No relevant content to summarize." , "empty string" , "content isn't presentation-worthy." , "No relevant content to summarize." , " No transformation possible." , " No content to transform."]
 similarity = 0
@@ -311,8 +311,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     else:
                         template_msg_continue.append({"role" : "user" , "content" : completion.choices[0].message.content})  '''                      
  
-                    if not should_append:
+                    if not should_append and sendToGroq:
                         print("failed: " , completion.choices[0].message.content)
+                        print(window)
 
                     if "next slide" in transcription.lower():
                         should_clear_slide = 1
