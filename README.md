@@ -1,2 +1,3 @@
-# uottahack7-wingit
-3 walk in -> 1st place???????
+# WingIt!
+
+We built a real-time presentation assistant that leverages Groq's multi-modal capabilities to transform speech into structured presentations. It uses Groq's audio transcription to turn voice into text, their language model to structure and organize content into bullet points, and their vision model to gauge audience engagement during presentations. The system works in real-time - you can watch your presentation build itself as you speak, with the AI intelligently organizing content into slides and automatically adding new slides when topics change. What makes this special is the seamless integration of multiple AI modalities (speech, text, and vision) all powered through Groq's API, showing how multiple AI capabilities can come together to create a natural and intuitive presentation experience. It's perfect for quickly creating pitch decks, capturing lecture notes, or summarizing meetings - turning what used to be hours of manual PowerPoint work into a fluid, automated process.
