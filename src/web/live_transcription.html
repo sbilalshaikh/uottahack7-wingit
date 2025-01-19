@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>WingIt Presentation Buddy</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/inter/3.19.3/inter.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         /* Global Styles */
         :root {
@@ -202,14 +206,13 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
     <script>
         // Initialize variables
         let isRecording = false;
         let websocket = null;
         let recorder = null;
         var select = 0;
+        let slidesHistory = []; // Array to store slides
 
         // Set chunk duration and websocket URL
         const chunkDuration = 4000;
@@ -224,13 +227,117 @@
 
         // Add event listeners
         exportButton.addEventListener("click", async () => {
-            // Export PDF
-            var transcription = document.getElementById('transcriptions');
-            html2pdf(transcription);
-        });
+          const element = document.createElement('div');
+          element.style.width = '1100px'; // Fixed width for better PDF layout
+          
+          // Helper function to create a slide
+          function createSlideElement(textContent, imagesContent) {
+              const slide = document.createElement('div');
+              slide.style.pageBreakAfter = 'always';
+              slide.style.padding = '40px';
+              slide.style.marginBottom = '40px';
+              
+              // Add text content
+              const textDiv = document.createElement('div');
+              textDiv.style.marginBottom = '30px';
+              textDiv.innerHTML = textContent;
+              slide.appendChild(textDiv);
+              
+              // Add images in a grid
+              if (imagesContent) {
+                  const imageGrid = document.createElement('div');
+                  imageGrid.style.display = 'grid';
+                  imageGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                  imageGrid.style.gap = '20px';
+                  imageGrid.style.padding = '20px';
+                  
+                  // Process each image
+                  const tempDiv = document.createElement('div');
+                  tempDiv.innerHTML = imagesContent;
+                  const images = tempDiv.getElementsByTagName('img');
+                  
+                  Array.from(images).forEach(img => {
+                      const imgContainer = document.createElement('div');
+                      imgContainer.style.width = '100%';
+                      imgContainer.style.height = '300px'; // Fixed height for consistency
+                      
+                      const newImg = document.createElement('img');
+                      newImg.src = img.src;
+                      newImg.style.width = '100%';
+                      newImg.style.height = '100%';
+                      newImg.style.objectFit = 'contain';
+                      newImg.style.borderRadius = '8px';
+                      
+                      imgContainer.appendChild(newImg);
+                      imageGrid.appendChild(imgContainer);
+                  });
+                  
+                  slide.appendChild(imageGrid);
+              }
+              
+              return slide;
+          }
+          
+          // Add current slide if it has content
+          if (transcriptionsDiv.innerHTML.trim() || imageGridDiv.innerHTML.trim()) {
+              element.appendChild(createSlideElement(
+                  transcriptionsDiv.innerHTML,
+                  imageGridDiv.innerHTML
+              ));
+          }
+          
+          // Add historical slides
+          slidesHistory.forEach(slide => {
+              element.appendChild(createSlideElement(
+                  slide.text,
+                  slide.images
+              ));
+          });
+
+          // PDF options optimized for images
+          const opt = {
+              margin: 0.5,
+              filename: 'presentation.pdf',
+              image: { type: 'jpeg', quality: 1 },
+              html2canvas: { 
+                  scale: 2,
+                  useCORS: true,
+                  logging: true,
+                  allowTaint: true,
+                  imageTimeout: 0
+              },
+              jsPDF: { 
+                  unit: 'in', 
+                  format: 'a4', 
+                  orientation: 'landscape',
+                  compress: false
+              }
+          };
+
+          try {
+              // Create a temporary container and add it to the document
+              const tempContainer = document.createElement('div');
+              tempContainer.style.position = 'absolute';
+              tempContainer.style.left = '-9999px';
+              tempContainer.appendChild(element);
+              document.body.appendChild(tempContainer);
+
+              // Generate PDF
+              await html2pdf()
+                  .set(opt)
+                  .from(element)
+                  .save();
+
+              // Cleanup
+              document.body.removeChild(tempContainer);
+          } catch (error) {
+              console.error('PDF generation error:', error);
+              alert('Error generating PDF. Check console for details.');
+          }
+      });
+
 
         recordButton.addEventListener("click", async () => {
-            // Toggle recording
             if (!isRecording) {
                 try {
                     await setupWebSocket();
@@ -243,6 +350,13 @@
                     console.error("Error starting recording:", err);
                 }
             } else {
+                // Save the last slide before stopping
+                if (transcriptionsDiv.innerHTML.trim() || imageGridDiv.innerHTML.trim()) {
+                    slidesHistory.push({
+                        text: transcriptionsDiv.innerHTML,
+                        images: imageGridDiv.innerHTML
+                    });
+                }
                 stopRecording();
                 recordButton.textContent = "Start Recording";
                 recordingIndicator.style.display = 'none';
@@ -322,7 +436,15 @@
                     const data = JSON.parse(event.data);
                     const { transcription, buffer, clear, imageUrl } = data;
 
-                    if ((clear && header.trim() !== "l") || select === 1) {
+                    if ((clear && transcription.trim() !== "l") || select === 1) {
+                        // Save current slide before clearing
+                        if (transcriptionsDiv.innerHTML.trim() || imageGridDiv.innerHTML.trim()) {
+                            slidesHistory.push({
+                                text: transcriptionsDiv.innerHTML,
+                                images: imageGridDiv.innerHTML
+                            });
+                        }
+
                         const header = createHeader(transcription);
                         transcriptionsDiv.innerHTML = "";
                         imageGridDiv.innerHTML = "";
@@ -354,13 +476,13 @@
         async function startRecording() {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-
+            
             recorder.ondataavailable = (e) => {
                 if (websocket && websocket.readyState === WebSocket.OPEN) {
                     websocket.send(e.data);
                 }
             };
-
+            
             recorder.start(chunkDuration);
         }
 
@@ -371,7 +493,7 @@
                 recorder.stream.getTracks().forEach(track => track.stop());
                 recorder = null;
             }
-
+            
             if (websocket) {
                 websocket.close();
                 websocket = null;
@@ -397,32 +519,7 @@
             document.getElementById("laughter-value").textContent = laughterValue;
             document.getElementById("applause-value").textContent = applauseValue;
             document.getElementById("silence-value").textContent = silenceValue;
-
-            startWebcam()
         }, 5000);
-
-        function triggerFlash() {
-            const flash = document.getElementById('flash');
-            
-            // Make the flash visible
-            flash.style.opacity = 1;
-            
-            // After 200ms, fade the flash away
-            setTimeout(() => {
-                flash.style.opacity = 0;
-            }, 200);
-        }
-
-        // Function to start the webcam
-        async function startWebcam() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const videoElement = document.getElementById('webcam');
-                videoElement.srcObject = stream;
-            } catch (err) {
-                console.error("Error accessing webcam: ", err);
-            }
-        }
     </script>
 </body>
 </html>
