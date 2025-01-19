@@ -1,390 +1,428 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WingIt Presentation Buddy</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/inter/3.19.3/inter.css" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --bg-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      --surface: #ffffff;
-      --text: #1f2937;
-      --text-secondary: #6b7280;
-      --border: #e5e7eb;
-    }
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>WingIt Presentation Buddy</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/inter/3.19.3/inter.css" rel="stylesheet">
+    <style>
+        /* Global Styles */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --surface: #ffffff;
+            --text: #1f2937;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+        }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    html, body {
-      height: 100vh;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: #f9fafb;
-      color: var(--text);
-    }
+        html, body {
+            height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #f9fafb;
+            color: var(--text);
+        }
 
-    .container {
-      height: 100vh;
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      max-width: 1600px;
-      margin: 0 auto;
-      gap: 1.5rem;
-    }
+        .container {
+            height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            max-width: 1600px;
+            margin: 0 auto;
+            gap: 1.5rem;
+        }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 0;
-    }
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
 
-    .title {
-      font-size: 2.5rem;
-      font-weight: 800;
-      background: var(--bg-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+        .title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--bg-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-    .button-container {
-      display: flex;
-      gap: 1rem;
-    }
+        .reaction-box {
+            display: flex;
+            flex-direction: column;
+            margin-right: 20px;
+        }
 
-    button {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 1.2rem;
-      font-weight: 500;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+        .bullet-point {
+          margin: 0.75rem 0;
+          padding: 1rem;
+          border-radius: 0.75rem;
+          background: #f9fafb;
+          animation: slideIn 0.3s ease-out;
+          border: 1px solid var(--border);
+          font-size: 1rem;
+          color: var(--text);
+          line-height: 1.5;
+        }
 
-    #recordButton {
-      background: var(--bg-gradient);
-      color: white;
-    }
+        .metrics {
+            display: flex;
+            flex-direction: column;
+        }
 
-    #recordButton:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-    }
+        .metric {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
 
-    #exportButton {
-      background: white;
-      color: var(--primary);
-      border: 1px solid var(--border);
-    }
+        /* Button Styles */
+        .button-container {
+            display: flex;
+            gap: 1rem;
+        }
 
-    #exportButton:hover {
-      background: #f9fafb;
-    }
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 1.2rem;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-    .content-container {
-      display: flex;
-      gap: 1.5rem;
-      flex: 1;
-      min-height: 0;
-    }
+        #recordButton {
+            background: var(--bg-gradient);
+            color: white;
+        }
 
-    .text-area {
-      flex: 1;
-      background: var(--surface);
-      border-radius: 1rem;
-      padding: 1.5rem;
-      overflow-y: auto;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
+        #recordButton:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
 
-    .image-area {
-      flex: 2;
-      background: var(--surface);
-      border-radius: 1rem;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
-      gap: 1rem;
-      padding: 1rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
+        #exportButton {
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
 
-    .bullet-point {
-      margin: 0.75rem 0;
-      padding: 1rem;
-      border-radius: 0.75rem;
-      background: #f9fafb;
-      animation: slideIn 0.3s ease-out;
-      border: 1px solid var(--border);
-      font-size: 1rem;
-      color: var(--text);
-      line-height: 1.5;
-    }
+        #exportButton:hover {
+            background: #f9fafb;
+        }
 
-    .header {
-      font-size: 2rem;
-      font-weight: 600;
-      margin: 1rem 0;
-      color: var(--primary);
-    }
+        /* Content Styles */
+        .content-container {
+            display: flex;
+            gap: 1.5rem;
+            flex: 1;
+            min-height: 0;
+        }
 
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+        .text-area {
+            flex: 1;
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
 
-    /* Scrollbar styling */
-    .text-area::-webkit-scrollbar {
-      width: 8px;
-    }
+        .image-area {
+            flex: 2;
+            background: var(--surface);
+            border-radius: 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
 
-    .text-area::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 4px;
-    }
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .content-container {
+                flex-direction: column;
+            }
 
-    .text-area::-webkit-scrollbar-thumb {
-      background: #ddd;
-      border-radius: 4px;
-    }
+            .container {
+                padding: 1rem;
+            }
 
-    .text-area::-webkit-scrollbar-thumb:hover {
-      background: #ccc;
-    }
-
-    /* Loading indicator */
-    .recording-indicator {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      background-color: #ef4444;
-      border-radius: 50%;
-      margin-right: 8px;
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.2); opacity: 0.8; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    /* Responsive design */
-    @media (max-width: 768px) {
-      .content-container {
-        flex-direction: column;
-      }
-      
-      .container {
-        padding: 1rem;
-      }
-      
-      .image-area {
-        grid-template-columns: 1fr;
-        grid-template-rows: repeat(4, 1fr);
-      }
-    }
-  </style>
-
+            .image-area {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1 class="title">WingIt Presentation Buddy</h1>
-      <div class="button-container">
-        <button id="recordButton">
-          <span class="recording-indicator" style="display: none;"></span>
-          Start Recording
-        </button>
-        <button id="exportButton">Export PDF</button>
-      </div>
+    <div class="container">
+        <div class="header">
+            <div class="reaction-box">
+                <h2>Live Audience Reaction</h2>
+                <div class="metrics">
+                    <div class="metric">
+                        <span id="laughter">Engagement: <span id="laughter-value">0</span></span>
+                    </div>
+                    <div class="metric">
+                        <span id="applause">Mood: <span id="applause-value">0</span></span>
+                    </div>
+                    <div class="metric">
+                        <span id="silence">Excitement: <span id="silence-value">0</span></span>
+                    </div>
+                </div>
+            </div>
+            <h1 class="title">WingIt Presentation Buddy</h1>
+            <div class="button-container">
+                <button id="recordButton">
+                    <span class="recording-indicator" style="display: none;"></span>
+                    Start Recording
+                </button>
+                <button id="exportButton">Export PDF</button>
+            </div>
+        </div>
+        <div class="content-container">
+            <div id="transcriptions" class="text-area"></div>
+            <div id="imageGrid" class="image-area"></div>
+        </div>
     </div>
-    <div class="content-container">
-      <div id="transcriptions" class="text-area"></div>
-      <div id="imageGrid" class="image-area"></div>
-    </div>
-  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-  <script>
-    let isRecording = false;
-    let websocket = null;
-    let recorder = null;
-    var select = 0;
+    <script>
+        // Initialize variables
+        let isRecording = false;
+        let websocket = null;
+        let recorder = null;
+        var select = 0;
 
-    const chunkDuration = 4000;
-    const websocketUrl = "ws://localhost:4999/asr";
+        // Set chunk duration and websocket URL
+        const chunkDuration = 4000;
+        const websocketUrl = "ws://localhost:4999/asr";
 
-    const recordButton = document.getElementById("recordButton");
-    const exportButton = document.getElementById("exportButton");
-    const transcriptionsDiv = document.getElementById("transcriptions");
-    const imageGridDiv = document.getElementById("imageGrid");
-    const recordingIndicator = recordButton.querySelector('.recording-indicator');
+        // Get HTML elements
+        const recordButton = document.getElementById("recordButton");
+        const exportButton = document.getElementById("exportButton");
+        const transcriptionsDiv = document.getElementById("transcriptions");
+        const imageGridDiv = document.getElementById("imageGrid");
+        const recordingIndicator = recordButton.querySelector('.recording-indicator');
 
-    exportButton.addEventListener("click", async () => {
-      var transcription = document.getElementById('transcriptions');
-      html2pdf(transcription);
-    });
+        // Add event listeners
+        exportButton.addEventListener("click", async () => {
+            // Export PDF
+            var transcription = document.getElementById('transcriptions');
+            html2pdf(transcription);
+        });
 
-    recordButton.addEventListener("click", async () => {
-      if (!isRecording) {
-        try {
-          await setupWebSocket();
-          await startRecording();
-          recordButton.textContent = "Stop Recording";
-          recordingIndicator.style.display = 'inline-block';
-          isRecording = true;
-          transcriptionsDiv.innerHTML = "";
-        } catch (err) {
-          console.error("Error starting recording:", err);
-        }
-      } else {
-        stopRecording();
-        recordButton.textContent = "Start Recording";
-        recordingIndicator.style.display = 'none';
-        isRecording = false;
-      }
-    });
-
-    function createBulletPoint(text) {
-      if (text && text.trim()) {
-        const bullet = document.createElement('div');
-        bullet.className = 'bullet-point';
-        bullet.textContent = `${text.trim()}`;
-        return bullet;
-      }
-      return null;
-    }
-    
-    function createHeader(text) {
-      if (text && text.trim()) {
-        const header = document.createElement('div');
-        header.className = 'header';
-        header.textContent = `${text.trim()}`;
-        return header;
-      }
-      return null;
-    }
-
-    function addImageToGrid(imageUrl) {
-      if (!imageUrl || !imageUrl.trim()) return;
-
-      const imgElement = document.createElement('img');
-      imgElement.src = imageUrl.trim();
-      imgElement.alt = "Generated Image";
-      imgElement.style.width = "100%";
-      imgElement.style.height = "100%";
-      imgElement.style.objectFit = "contain";
-      imgElement.style.borderRadius = "0.75rem";
-      imgElement.style.transition = "transform 0.2s ease";
-
-      imgElement.style.maxWidth = "fit-content";
-      imgElement.style.minWidth = "300px";
-      imgElement.style.height = "auto";
-      
-      imgElement.addEventListener('mouseenter', () => {
-        imgElement.style.transform = 'scale(1.02)';
-      });
-      
-      imgElement.addEventListener('mouseleave', () => {
-        imgElement.style.transform = 'scale(1)';
-      });
-
-      if (imageGridDiv.children.length < 4) {
-        imageGridDiv.appendChild(imgElement);
-      } else {
-        imageGridDiv.removeChild(imageGridDiv.firstChild);
-        imageGridDiv.appendChild(imgElement);
-      }
-    }
-
-    document.addEventListener("keydown", async(event) => {
-      if (event.key.toLowerCase() == 'l') {
-        select = 1;
-      }
-    });
-
-    function setupWebSocket() {
-      return new Promise((resolve, reject) => {
-        websocket = new WebSocket(websocketUrl);
-        
-        websocket.onopen = () => resolve();
-        
-        websocket.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          const { transcription, buffer, clear, imageUrl } = data;
-
-          if ((clear && header.trim() !== "l") || select === 1) {
-            const header = createHeader(transcription);
-            transcriptionsDiv.innerHTML = "";
-            imageGridDiv.innerHTML = "";
-            select = 0;
-            if (header) {
-              transcriptionsDiv.appendChild(header);
-              transcriptionsDiv.scrollTop = transcriptionsDiv.scrollHeight;
+        recordButton.addEventListener("click", async () => {
+            // Toggle recording
+            if (!isRecording) {
+                try {
+                    await setupWebSocket();
+                    await startRecording();
+                    recordButton.textContent = "Stop Recording";
+                    recordingIndicator.style.display = 'inline-block';
+                    isRecording = true;
+                    transcriptionsDiv.innerHTML = "";
+                } catch (err) {
+                    console.error("Error starting recording:", err);
+                }
+            } else {
+                stopRecording();
+                recordButton.textContent = "Start Recording";
+                recordingIndicator.style.display = 'none';
+                isRecording = false;
             }
-          }
+        });
 
-          if (transcription && transcription.trim() !== "" && transcription.trim() !== "\"\"") {
-            const bullet = createBulletPoint(transcription);
-            if (bullet) {
-              transcriptionsDiv.appendChild(bullet);
-              transcriptionsDiv.scrollTop = transcriptionsDiv.scrollHeight;
+        // Create bullet points and headers
+        function createBulletPoint(text) {
+            if (text && text.trim()) {
+                const bullet = document.createElement('div');
+                bullet.className = 'bullet-point';
+                bullet.textContent = `${text.trim()}`;
+                return bullet;
             }
-          }
-
-          if (imageUrl) {
-            addImageToGrid(imageUrl);
-          }
-        };
-
-        websocket.onerror = () => reject(new Error("WebSocket connection failed"));
-      });
-    }
-
-    async function startRecording() {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-      
-      recorder.ondataavailable = (e) => {
-        if (websocket && websocket.readyState === WebSocket.OPEN) {
-          websocket.send(e.data);
+            return null;
         }
-      };
-      
-      recorder.start(chunkDuration);
-    }
 
-    function stopRecording() {
-      if (recorder) {
-        recorder.stop();
-        recorder.stream.getTracks().forEach(track => track.stop());
-        recorder = null;
-      }
-      
-      if (websocket) {
-        websocket.close();
-        websocket = null;
-      }
-    }
-  </script>
+        function createHeader(text) {
+            if (text && text.trim()) {
+                const header = document.createElement('div');
+                header.className = 'header';
+                header.textContent = `${text.trim()}`;
+                return header;
+            }
+            return null;
+        }
+
+        // Add images to grid
+        function addImageToGrid(imageUrl) {
+            if (!imageUrl || !imageUrl.trim()) return;
+
+            const imgElement = document.createElement('img');
+            imgElement.src = imageUrl.trim();
+            imgElement.alt = "Generated Image";
+            imgElement.style.width = "100%";
+            imgElement.style.height = "100%";
+            imgElement.style.objectFit = "contain";
+            imgElement.style.borderRadius = "0.75rem";
+            imgElement.style.transition = "transform 0.2s ease";
+
+            imgElement.style.maxWidth = "fit-content";
+            imgElement.style.minWidth = "300px";
+            imgElement.style.height = "auto";
+
+            imgElement.addEventListener('mouseenter', () => {
+                imgElement.style.transform = 'scale(1.02)';
+            });
+
+            imgElement.addEventListener('mouseleave', () => {
+                imgElement.style.transform = 'scale(1)';
+            });
+
+            if (imageGridDiv.children.length < 4) {
+                imageGridDiv.appendChild(imgElement);
+            } else {
+                imageGridDiv.removeChild(imageGridDiv.firstChild);
+                imageGridDiv.appendChild(imgElement);
+            }
+        }
+
+        // Handle keyboard event
+        document.addEventListener("keydown", async(event) => {
+            if (event.key.toLowerCase() == 'l') {
+                select = 1;
+            }
+        });
+
+        // Set up WebSocket connection
+        function setupWebSocket() {
+            return new Promise((resolve, reject) => {
+                websocket = new WebSocket(websocketUrl);
+
+                websocket.onopen = () => resolve();
+
+                websocket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    const { transcription, buffer, clear, imageUrl } = data;
+
+                    if ((clear && header.trim() !== "l") || select === 1) {
+                        const header = createHeader(transcription);
+                        transcriptionsDiv.innerHTML = "";
+                        imageGridDiv.innerHTML = "";
+                        select = 0;
+                        if (header) {
+                            transcriptionsDiv.appendChild(header);
+                            transcriptionsDiv.scrollTop = transcriptionsDiv.scrollHeight;
+                        }
+                    }
+
+                    if (transcription && transcription.trim() !== "" && transcription.trim() !== "\"\"") {
+                        const bullet = createBulletPoint(transcription);
+                        if (bullet) {
+                            transcriptionsDiv.appendChild(bullet);
+                            transcriptionsDiv.scrollTop = transcriptionsDiv.scrollHeight;
+                        }
+                    }
+
+                    if (imageUrl) {
+                        addImageToGrid(imageUrl);
+                    }
+                };
+
+                websocket.onerror = () => reject(new Error("WebSocket connection failed"));
+            });
+        }
+
+        // Start recording
+        async function startRecording() {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+
+            recorder.ondataavailable = (e) => {
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    websocket.send(e.data);
+                }
+            };
+
+            recorder.start(chunkDuration);
+        }
+
+        // Stop recording
+        function stopRecording() {
+            if (recorder) {
+                recorder.stop();
+                recorder.stream.getTracks().forEach(track => track.stop());
+                recorder = null;
+            }
+
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+        }
+
+        // Function to generate a random number from a Gaussian distribution
+        function gaussianRandom(mean, stdDev) {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+            while(v === 0) v = Math.random();
+            let num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+            num = stdDev * num + mean;
+            return num;
+        }
+
+        // Update metrics every second
+        setInterval(() => {
+            const laughterValue = Math.round(gaussianRandom(5, 2)); // Engagement
+            const applauseValue = Math.round(gaussianRandom(5, 1)); // Mood
+            const silenceValue = laughterValue + Math.round(gaussianRandom(0, 1)); // Excitement
+
+            document.getElementById("laughter-value").textContent = laughterValue;
+            document.getElementById("applause-value").textContent = applauseValue;
+            document.getElementById("silence-value").textContent = silenceValue;
+
+            startWebcam()
+        }, 5000);
+
+        function triggerFlash() {
+            const flash = document.getElementById('flash');
+            
+            // Make the flash visible
+            flash.style.opacity = 1;
+            
+            // After 200ms, fade the flash away
+            setTimeout(() => {
+                flash.style.opacity = 0;
+            }, 200);
+        }
+
+        // Function to start the webcam
+        async function startWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const videoElement = document.getElementById('webcam');
+                videoElement.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing webcam: ", err);
+            }
+        }
+    </script>
 </body>
 </html>
