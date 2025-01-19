@@ -16,13 +16,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from whisper_online import backend_factory, online_factory, add_shared_args
 
-<<<<<<< HEAD
 from image_gen import imageGen
-=======
 from groq import Groq
 import base64
 import cv2
->>>>>>> main
 
 app = FastAPI()
 app.add_middleware(
@@ -274,14 +271,19 @@ async def websocket_endpoint(websocket: WebSocket):
                             top_p=0.1
 
                         )
+
                     if completion.choices[0].message.content != "":
-                        vectorizer = TfidfVectorizer(stop_words='english')
-                        should_append = (
-                            check_similarity(completion.choices[0].message.content, list(window), 0.2, vectorizer) and
-                            check_similarity(completion.choices[0].message.content, non_responses, 0.1, vectorizer)
-                        )
+                        if len(window) == 0:
+                            should_append = True
+                        else:
+                            vectorizer = TfidfVectorizer(stop_words='english')
+                            should_append=True
+                            '''should_append = (
+                                check_similarity(completion.choices[0].message.content, list(window), 0.2, vectorizer) and
+                                check_similarity(completion.choices[0].message.content, non_responses, 0.1, vectorizer)
+                            )'''
                     else:
-                        should_append == False
+                        should_append = False
 
                     '''try:
                         print("Making request to Groq for slide transition...")
