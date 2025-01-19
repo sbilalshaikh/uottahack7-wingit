@@ -16,9 +16,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from whisper_online import backend_factory, online_factory, add_shared_args
 
+<<<<<<< HEAD
+from image_gen import imageGen
+=======
 from groq import Groq
 import base64
 import cv2
+>>>>>>> main
 
 app = FastAPI()
 app.add_middleware(
@@ -201,12 +205,15 @@ async def websocket_endpoint(websocket: WebSocket):
     print("Online loaded.")
 
     sendToGroq=False
+    imageUrl = ""
     groq_client = Groq(api_key="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")
 
     # Continuously read decoded PCM from ffmpeg stdout in a background task
     async def ffmpeg_stdout_reader():
+        similarity = 0
         global template_msg_continue 
         nonlocal sendToGroq
+        nonlocal imageUrl
         nonlocal pcm_buffer
         nonlocal sendToGroq
         loop = asyncio.get_event_loop()
@@ -308,6 +315,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     if should_append:
                         summaries.append(completion.choices[0].message.content)
                         window.append(completion.choices[0].message.content)
+                        imageUrl = imageGen(completion.choices[0].message.content)
 
 
                     '''if should_clear_slide:
@@ -441,8 +449,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     await websocket.send_json({
                         "transcription": completion.choices[0].message.content if should_append else "",
                         "buffer": buffer,
-                        "clear" : int(should_clear_slide)
-                    })
+                        "clear" : int(should_clear_slide),
+                        "imageUrl": imageUrl if should_append else ""
+                     })
             except Exception as e:
                 print(f"Exception in ffmpeg_stdout_reader: {e}")
                 break
