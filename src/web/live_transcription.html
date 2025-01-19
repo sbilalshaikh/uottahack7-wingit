@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>WingIt Presentation Buddy</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/inter/3.19.3/inter.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         /* Global Styles */
         :root {
@@ -202,8 +203,6 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
     <script>
         // Initialize variables
         let isRecording = false;
@@ -213,7 +212,7 @@
 
         // Set chunk duration and websocket URL
         const chunkDuration = 4000;
-        const websocketUrl = "ws://localhost:4999/asr";
+        const websocketUrl = "ws://localhost:8000/asr";
 
         // Get HTML elements
         const recordButton = document.getElementById("recordButton");
@@ -225,7 +224,7 @@
         // Add event listeners
         exportButton.addEventListener("click", async () => {
             // Export PDF
-            var transcription = document.getElementById('transcriptions');
+            var transcription = document.getElementsByClassName('content-container')[0];
             html2pdf(transcription);
         });
 
